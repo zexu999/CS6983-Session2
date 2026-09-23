@@ -23,18 +23,22 @@ At runtime the Actor applies a constant force toward the Target on the ground pl
 - `InClassActorController.cs` — TODO: apply force toward the target → `_body.AddForce(toTarget.normalized * moveStrength)` in `FixedUpdate()`.
 - `InClassGoalZone.cs` — TODOs: `IsPayload()` returns `other.CompareTag(payloadTag)`; `OnTriggerEnter` sets `_succeeded = true`, records `TimeToSuccess = Time.time - _runStartTime`, and invokes `PayloadSucceeded?.Invoke(TimeToSuccess)`.
 
+
 ## Experiment Observations
 
-I modified the Rigidbody parameters of the Actor and the Payload and recorded the time-to-success (from the `PayloadSucceeded` event / Console log) for each run.
+Baseline settings — Actor: Mass 1, Linear Damping 0, Angular Damping 0.05. Payload (sphere): Mass 1, Linear Damping 1, Angular Damping 5. `moveStrength = 20`.
+Only one parameter was changed per run; everything else stayed at baseline. Time to success is from the `PayloadSucceeded` event / Console log.
 
-| # | Object | Parameter changed | Default → New | Time to success | Observation |
+| # | Object | Parameter changed | Baseline → New | Time to success | Observation |
 |---|---|---|---|---|---|
-| 1 | Actor | Mass | 1 → 5 | _fill in_ s | Heavier actor accelerates more slowly under the same force (F = ma), so it takes longer to reach/push the payload toward the goal. |
-| 2 | Actor | Linear Damping | 0 → 2 | _fill in_ s | Higher damping acts like drag: top speed drops, motion looks "heavier"/more controlled; time to success increases. |
-| 3 | Payload | Mass | 1 → 5 | _fill in_ s | Heavier payload is harder for the actor to push; it resists changes in motion and may stop short of the goal zone. |
-| 4 | Payload | Angular Damping | 0.05 → 5 | _fill in_ s | High angular damping kills spin quickly — the payload rolls/slides with less rotation but its linear motion is mostly unchanged. |
-| 5 | _(your own)_ | | | _fill in_ s | |
+| 0 | – | Baseline | – | **1.26 s** | Actor pushes the ball straight into the Goal Zone. |
+| 1 | Payload | Mass | 1 → 5 | **3.90 s** | The heavier ball accelerates much more slowly when hit (F = ma), so the Actor has to keep pushing it. |
+| 2 | Payload | Mass | 1 → 10 | **Did not reach goal** | The ball is too heavy for the Actor's fixed force (plus the ball's linear damping), so it never reaches the Goal Zone. |
+| 3 | Actor | Linear Damping | 0 → 5 | **2.32 s** | Damping acts like drag: the Actor accelerates slower and hits the ball with less momentum, nearly doubling the time. |
+| 4 | Payload | Angular Damping | 5 → 0.05 | **1.22 s** | The ball rolls more freely after being hit, so it arrives slightly faster, but the difference is small because the Actor pushes it the whole way. |
 
+**Takeaway:** Payload mass had the biggest effect (it can make the task fail entirely), Actor linear damping had a moderate effect, and Payload angular damping had only a minor
+effect.
 ### Notes
 - Linear Damping = drag on translational motion; Angular Damping = drag on rotation. Both are in the Rigidbody component in the Inspector.
 - Mass only matters in combination with forces (F = ma) — with no force applied, changing mass alone shows little difference.
